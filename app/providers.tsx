@@ -7,7 +7,7 @@ interface ProvidersProps {
   children: React.ReactNode;
 }
 
-const Providers = ({ children }: ProvidersProps) => {
+const Providers = () => {
   const lenisRef = useRef<LenisRef>(null);
 
   useEffect(() => {
@@ -21,7 +21,7 @@ const Providers = ({ children }: ProvidersProps) => {
   }, []);
   return (
     <>
-      <ReactLenis root options={{ autoRaf: false }} ref={lenisRef} />;{children}
+      <ReactLenis root options={{ autoRaf: false }} ref={lenisRef} />
     </>
   );
 };

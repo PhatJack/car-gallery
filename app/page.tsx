@@ -5,138 +5,80 @@ import { useRef, useState, useEffect } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Container, Graphics, Sprite } from "pixi.js";
-
-import { extend } from "@pixi/react";
-import { PixiPixelImage } from "@/components/PixiPixelImage";
-import { Assets } from "pixi.js";
+import Lenis from "lenis";
 
 gsap.registerPlugin(ScrollTrigger);
 
-extend({
-  Container,
-  Graphics,
-  Sprite,
-});
-
 export default function Home() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
+  const container = useRef<any>(null);
   useEffect(() => {
-    Assets.load("https://picsum.photos/id/1015/600/900");
-  }, []);
-
-  const verticalLoop = (elements: HTMLElement[], speed: number) => {
-    elements = gsap.utils.toArray(elements);
-    let firstBounds = elements[0].getBoundingClientRect(),
-      lastBounds = elements[elements.length - 1].getBoundingClientRect(),
-      top =
-        firstBounds.top -
-        firstBounds.height -
-        Math.abs(elements[1].getBoundingClientRect().top - firstBounds.bottom),
-      bottom = lastBounds.top,
-      distance = bottom - top,
-      duration = Math.abs(distance / speed),
-      tl = gsap.timeline({ repeat: -1 }),
-      plus = speed < 0 ? "-=" : "+=",
-      minus = speed < 0 ? "+=" : "-=";
-    elements.forEach((el) => {
-      let bounds = el.getBoundingClientRect(),
-        ratio = Math.abs((bottom - bounds.top) / distance);
-      if (speed < 0) {
-        ratio = 1 - ratio;
-      }
-      tl.to(
-        el,
-        {
-          y: plus + distance * ratio,
-          duration: duration * ratio,
-          ease: "none",
-        },
-        0,
-      );
-      tl.fromTo(
-        el,
-        {
-          y: minus + distance,
-        },
-        {
-          y: plus + (1 - ratio) * distance,
-          ease: "none",
-          duration: (1 - ratio) * duration,
-          immediateRender: false,
-        },
-        duration * ratio,
-      );
+    const lenis = new Lenis({
+      duration: 1.2,
+      smoothWheel: true,
+      // infinite: true,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      wrapper: container.current!,
+      content: container.current!.querySelector(".scroll-content"),
     });
-    return tl;
-  };
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+    lenis.on("scroll", ScrollTrigger.update);
+
+    return () => lenis.destroy();
+  }, []);
 
   useGSAP(
     () => {
-      gsap.utils.toArray(".single-board-lines").forEach((line: any, i) => {
-        // const links = line.querySelectorAll("a"),
-        //   tl = verticalLoop(links, 50);
-        // tl.progress(i ? 1 : 0);
-        // tl.timeScale(i ? -1 : 1);
-        // i && tl.eventCallback("onReverseComplete", reverseCompleteHandler);
-        // function reverseCompleteHandler() {
-        //   console.log("reverseComplete");
-        //   tl.progress(1);
-        // }
-        // links.forEach((link: any) => {
-        //   link.addEventListener("mouseenter", () =>
-        //     gsap.to(tl, { timeScale: 0, overwrite: true }),
-        //   );
-        //   link.addEventListener("mouseleave", () =>
-        //     gsap.to(tl, { timeScale: i ? -1 : 1, overwrite: true }),
-        //   );
-        // });
+      const items = gsap.utils.toArray(".car-item img");
+
+      items.forEach((img: any) => {
+        gsap.fromTo(
+          img,
+          { scale: 1 }, // Starting state
+          {
+            scale: 0.8, // Ending state (scaled down)
+            ease: "none",
+            scrollTrigger: {
+              trigger: img,
+							scroller: container.current,
+              start: "top top", // When the top of the image hits the top of the viewport
+              end: "bottom top", // When the bottom of the image hits the top
+              scrub: true, // Links animation progress to scroll distance
+							markers: true,
+            },
+          },
+        );
       });
     },
-    { scope: containerRef },
+    { scope: container },
   );
 
   return (
-    <div ref={containerRef} className="scrollbar-hide">
-      <div className="relative w-72 h-112.5 mx-auto my-20">
-        {hoveredIndex && <PixiPixelImage src={`/test.jpg`} hovered={true} />}
-        <Image
-          src={`/test.jpg`}
-          alt={`Image`}
-          width={600}
-          height={600}
-          onMouseEnter={() => setHoveredIndex(1)}
-          onMouseLeave={() => setHoveredIndex(null)}
-          className="w-full h-auto rounded-lg shadow-lg transition-all duration-300"
-        />
-      </div>
-      {/* <div className="grid grid-cols-6 p-2 gap-2 will-change-transform single-board-lines scrollbar-hide">
+    <div
+      ref={container}
+      className="max-h-dvh h-dvh overflow-hidden scroll-auto relative p-2"
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-6 gap-2 single-board-lines scroll-content ">
         {Array.from({ length: 42 }).map((item, i) => (
           <Link
             href={`/cars/${i}`}
             key={i}
             className="w-full h-full relative car-item rounded-2xl overflow-hidden"
           >
-            {hoveredIndex === i && (
-              <PixiPixelImage
-                src={`https://picsum.photos/id/1015/600/900`}
-                hovered={true}
-              />
-            )}
             <Image
-              src={`https://picsum.photos/id/1015/600/900`}
+              src={`/test.jpg`}
               alt={`Image ${i}`}
               width={600}
               height={600}
-              onMouseEnter={() => setHoveredIndex(i)}
-              onMouseLeave={() => setHoveredIndex(null)}
               className="w-full h-auto rounded-lg shadow-lg transition-all duration-300"
             />
           </Link>
         ))}
-      </div> */}
+      </div>
     </div>
   );
 }

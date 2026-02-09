@@ -1,8 +1,4 @@
 import { gsap } from "gsap";
-import { Draggable } from "gsap/Draggable";
-import { InertiaPlugin } from "gsap/InertiaPlugin";
-
-gsap.registerPlugin(Draggable, InertiaPlugin);
 
 export function verticalLoop(items, config) {
   let timeline;
@@ -148,12 +144,9 @@ export function verticalLoop(items, config) {
         populateHeights();
         deep && populateTimeline();
         populateOffsets();
-        deep && tl.draggable && tl.paused()
-          ? tl.time(times[curIndex], true)
-          : tl.progress(progress, true);
+        tl.progress(progress, true);
       },
-      onResize = () => refresh(!(tl.draggable && tl.draggable.isDragging)),
-      proxy;
+      onResize = () => refresh(true);
     gsap.set(items, { y: 0 });
     populateHeights();
     populateTimeline();
@@ -196,70 +189,6 @@ export function verticalLoop(items, config) {
     if (config.reversed) {
       tl.vars.onReverseComplete();
       tl.reverse();
-    }
-    if (config.draggable && typeof Draggable === "function") {
-      proxy = document.createElement("div");
-      let wrap = gsap.utils.wrap(0, 1),
-        ratio,
-        startProgress,
-        draggable,
-        dragSnap,
-        lastSnap,
-        initChangeY,
-        wasPlaying,
-        align = () =>
-          tl.progress(
-            wrap(startProgress + (draggable.startY - draggable.y) * ratio),
-          ),
-        syncIndex = () => tl.closestIndex(true);
-      typeof InertiaPlugin === "undefined" &&
-        console.warn(
-          "InertiaPlugin required for momentum-based scrolling and snapping. https://greensock.com/club",
-        );
-      draggable = Draggable.create(proxy, {
-        trigger: items[0].parentNode,
-        type: "y",
-        onPressInit() {
-          let y = this.y;
-          gsap.killTweensOf(tl);
-          wasPlaying = !tl.paused();
-          tl.pause();
-          startProgress = tl.progress();
-          refresh();
-          ratio = 1 / totalHeight;
-          initChangeY = startProgress / -ratio - y;
-          gsap.set(proxy, { y: startProgress / -ratio });
-          // fix bug that existed prior to version 3.14.0 that could cause the inertia to jump due to setting the new x position.
-          if (+InertiaPlugin.version.split(".")[1] < 14) {
-            let tracker = InertiaPlugin.getByTarget(proxy),
-              pt = tracker && tracker._props.y;
-            pt && (pt.v1 = pt.v2 = startProgress / -ratio); // effectively resets the velocity (only necessary in old versions, before 3.14.0)
-          }
-        },
-        onDrag: align,
-        onThrowUpdate: align,
-        overshootTolerance: 0,
-        inertia: true,
-        snap(value) {
-          let time = -(value * ratio) * tl.duration(),
-            wrappedTime = timeWrap(time),
-            snapTime = times[getClosest(times, wrappedTime, tl.duration())],
-            dif = snapTime - wrappedTime;
-          Math.abs(dif) > tl.duration() / 2 &&
-            (dif += dif < 0 ? tl.duration() : -tl.duration());
-          lastSnap = (time + dif) / tl.duration() / -ratio;
-          return lastSnap;
-        },
-        onRelease() {
-          syncIndex();
-          draggable.isThrowing && (indexIsDirty = true);
-        },
-        onThrowComplete: () => {
-          syncIndex();
-          wasPlaying && tl.play();
-        },
-      })[0];
-      tl.draggable = draggable;
     }
     tl.closestIndex(true);
     lastIndex = curIndex;

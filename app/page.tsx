@@ -5,6 +5,10 @@ import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { verticalLoop } from "@/helpers/verticalLoop";
+import { ScrollSmoother } from "gsap/ScrollSmoother";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
 export default function Home() {
   const container = useRef<HTMLDivElement>(null);
@@ -14,10 +18,16 @@ export default function Home() {
 
   useGSAP(
     () => {
+      const smoother = ScrollSmoother.create({
+        wrapper: "#smoother-wrapper",
+        content: "#smoother-content",
+        smooth: 1.5,
+        effects: true,
+      });
+
       const boxes = gsap.utils.toArray(".car-item");
       if (boxes.length === 0) return;
 
-      // Create infinite vertical loop with GSAP
       const loop = verticalLoop(boxes, {
         repeat: -1,
         speed: 1, // Base speed for auto-scroll
@@ -26,7 +36,7 @@ export default function Home() {
       });
 
       let scrollVelocity = 0;
-      let autoScrollSpeed = 1;
+      let autoScrollSpeed = 0.3;
 
       // Handle wheel events for manual scrolling
       const handleWheel = (e: WheelEvent) => {
@@ -50,7 +60,7 @@ export default function Home() {
         const images = gsap.utils.toArray(".car-item img");
         gsap.to(images, {
           scale: 0.85,
-          duration: 0.3,
+          duration: 0.5,
           ease: "power2.out",
           overwrite: true,
         });
@@ -101,16 +111,20 @@ export default function Home() {
   return (
     <div
       ref={container}
+      id="smoother-wrapper"
       className="max-h-dvh h-dvh overflow-hidden relative p-2"
     >
-      <div className="flex flex-col gap-2">
-        {Array.from({ length: 42 }).map((item, i) => (
-          <div className="grid grid-cols-6 gap-2" key={i}>
+      <div id="smoother-content" className="flex flex-col gap-2">
+        {Array.from({ length: 10 }).map((item, i) => (
+          <div
+            className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-2"
+            key={i}
+          >
             {Array.from({ length: 6 }).map((item, j) => (
               <Link
                 href={`/cars/${j}`}
                 key={j}
-                className="car-item rounded-2xl overflow-hidden block w-75 h-100"
+                className="car-item rounded-2xl overflow-hidden block w-full h-100"
               >
                 <Image
                   src={`/test.jpg`}

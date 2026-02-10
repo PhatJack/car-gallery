@@ -1,6 +1,6 @@
 import { gsap } from "gsap";
 
-export function verticalLoop(items, config) {
+export function verticalLoop(items, config): gsap.core.Timeline {
   let timeline;
   items = gsap.utils.toArray(items);
   config = config || {};

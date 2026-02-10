@@ -27,7 +27,6 @@ export default function Home() {
 
       const boxes = gsap.utils.toArray(".car-item");
       if (boxes.length === 0) return;
-
       const loop = verticalLoop(boxes, {
         repeat: -1,
         speed: 1, // Base speed for auto-scroll
@@ -36,7 +35,7 @@ export default function Home() {
       });
 
       let scrollVelocity = 0;
-      let autoScrollSpeed = 0.3;
+      let autoScrollSpeed = 0.75;
 
       // Handle wheel events for manual scrolling
       const handleWheel = (e: WheelEvent) => {
@@ -53,7 +52,7 @@ export default function Home() {
 
         // Manually progress the timeline based on wheel delta
         const currentProgress = loop.progress();
-        const newProgress = currentProgress + (e.deltaY * 0.0001);
+        const newProgress = currentProgress + e.deltaY * 0.0001;
         loop.progress(newProgress);
 
         // Scale down effect
@@ -70,6 +69,8 @@ export default function Home() {
           clearTimeout(userScrollTimeoutRef.current);
         }
 
+				console.log(directionRef.current)
+
         // Resume auto-scroll after user stops
         userScrollTimeoutRef.current = setTimeout(() => {
           isUserScrollingRef.current = false;
@@ -78,7 +79,7 @@ export default function Home() {
           // Resume with detected direction
           if (directionRef.current === -1) {
             loop.timeScale(-autoScrollSpeed);
-            loop.play();
+            loop.reverse();
           } else {
             loop.timeScale(autoScrollSpeed);
             loop.play();
@@ -115,28 +116,30 @@ export default function Home() {
       className="max-h-dvh h-dvh overflow-hidden relative p-2"
     >
       <div id="smoother-content" className="flex flex-col gap-2">
-        {Array.from({ length: 10 }).map((item, i) => (
-          <div
-            className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-2"
-            key={i}
-          >
-            {Array.from({ length: 6 }).map((item, j) => (
-              <Link
-                href={`/cars/${j}`}
-                key={j}
-                className="car-item rounded-2xl overflow-hidden block w-full h-100"
-              >
-                <Image
-                  src={`/test.jpg`}
-                  alt={`Image ${j}`}
-                  width={600}
-                  height={600}
-                  className="w-full h-full object-cover rounded-2xl"
-                />
-              </Link>
-            ))}
-          </div>
-        ))}
+        <div className="will-change-transform flex flex-col gap-2">
+          {Array.from({ length: 10 }).map((item, i) => (
+            <div
+              className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-2"
+              key={i}
+            >
+              {Array.from({ length: 6 }).map((item, j) => (
+                <Link
+                  href={`/cars/${j}`}
+                  key={j}
+                  className="car-item rounded-2xl overflow-hidden block w-full h-100"
+                >
+                  <Image
+                    src={`/test.jpg`}
+                    alt={`Image ${j}`}
+                    width={600}
+                    height={600}
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                </Link>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
